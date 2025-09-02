@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Music Recognition</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="page-header">
+    <h1 class="header-title">music recognition algorithm</h1>
+    <div class="db-dropdown">
+      <button id="dbToggleBtn" class="btn-secondary"><i class="fa-solid fa-list-ul"></i> Songs in Database</button>
+      <div id="dbDropdownContent" class="dropdown-content">
+        <ul id="songs" class="song-list"></ul>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="recorder-container">
+      <p class="subtitle">Tap the microphone to identify a song...</p>
+      <button id="btnRecord" class="btn-record">
+        <i class="fa-solid fa-microphone"></i>
+      </button>
+      <div id="idResult" class="status-bar result-card">
+        <button class="close-btn" onclick="document.getElementById('idResult').classList.remove('visible')"><i class="fa-solid fa-xmark"></i></button>
+        <div class="result-content"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="add-song-footer">
+    <div class="add-song-card">
+      <h2>Add a Song from YouTube</h2>
+      <p class="card-description">Paste a YouTube link here to add the song to the DB.</p>
+      <div class="input-row">
+        <i class="fa-solid fa-link"></i>
+        <input id="ytUrl" type="text" class="text-input" placeholder="https://youtube.com/watch?v=...">
+      </div>
+       <input id="ytName" type="text" class="text-input" placeholder="Display name (optional)">
+      <button id="btnAddYtSong" class="btn-primary"><i class="fa-brands fa-youtube"></i> Add Song to Database</button>
+      <div id="ytStatus" class="status-bar">
+        <button class="close-btn" onclick="document.getElementById('ytStatus').classList.remove('visible')"><i class="fa-solid fa-xmark"></i></button>
+        <div class="status-content"></div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="recorder-wav.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

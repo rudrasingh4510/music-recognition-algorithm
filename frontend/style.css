@@ -1,0 +1,318 @@
+/* --- CSS Variables --- */
+:root {
+  --color-bg: #10111A;
+  --color-surface: #181A25; /* Card background */
+  --color-border: rgba(130, 130, 150, 0.2);
+  --color-primary: #0088ff;       /* Shazam Blue Accent */
+  --color-primary-hover: #339dff; /* Hover Blue */
+  --color-secondary: #2C2F40;
+  --color-secondary-hover: #3D4157;
+  --color-text: #E1E1E6;
+  --color-text-muted: #A8A8B3;
+  --color-error: #e5484d;
+  --font-family: 'Inter', sans-serif;
+}
+
+/* --- General & Reset --- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+i { margin-right: 8px; }
+h2 { font-weight: 600; margin-bottom: 4px; }
+
+/* --- Header & Dropdown --- */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 40px;
+  width: 100%;
+}
+.header-title {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+.db-dropdown { position: relative; }
+.dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  background-color: var(--color-surface);
+  min-width: 300px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  z-index: 1;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  padding: 8px;
+  text-align: left;
+}
+.dropdown-content.show { display: block; }
+.song-list {
+  list-style: none;
+  padding: 0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.song-list li { padding: 8px; border-bottom: 1px solid var(--color-border); font-size: 14px; }
+.song-list li:last-child { border-bottom: none; }
+.song-list a { color: var(--color-primary-hover); text-decoration: none; }
+.song-list a:hover { color: var(--color-primary); }
+
+/* --- Main Content (Recorder) --- */
+.main-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+}
+.subtitle {
+  color: var(--color-text-muted);
+  font-size: 18px;
+  margin-bottom: 24px;
+}
+.btn-record {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 0 0 rgba(0, 136, 255, 0.7);
+}
+.btn-record:hover { background: var(--color-primary-hover); transform: scale(1.05); }
+.btn-record.recording { animation: pulse 1.5s infinite; }
+.btn-record i {
+  font-size: 48px;
+  color: white;
+  margin: 0;
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(0, 136, 255, 0.7); }
+  70% { box-shadow: 0 0 0 20px rgba(0, 136, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 136, 255, 0); }
+}
+
+/* --- Footer (Add Song) --- */
+.add-song-footer {
+  padding: 16px 24px;
+  display: flex;
+  justify-content: center;
+}
+.add-song-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 20px 24px;
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center; 
+}
+.card-description {
+  color: var(--color-text-muted);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.input-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%; 
+  margin: 0 auto;
+}
+.input-row i {
+  position: absolute;
+  left: 14px;
+  color: var(--color-text-muted);
+}
+.text-input {
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-family: var(--font-family);
+  font-size: 16px;
+  width: 100%;
+}
+.input-row .text-input { padding-left: 40px; }
+.text-input::placeholder { color: var(--color-text-muted); }
+.text-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(0, 136, 255, 0.5);
+}
+
+/* --- Buttons --- */
+.btn-primary, .btn-secondary {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  font-family: var(--font-family);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-primary { background: var(--color-primary); color: #fff; }
+.btn-primary:hover { background: var(--color-primary-hover); }
+.btn-secondary { background: var(--color-secondary); color: var(--color-text); }
+.btn-secondary:hover { background: var(--color-secondary-hover); }
+
+/* --- Status Bar (General) --- */
+.status-bar {
+  width: 100%;
+  max-width: 500px;
+  margin: 16px auto 0 auto;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+  min-height: 45px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  text-align: center;
+  color: var(--color-text);
+}
+.status-bar.visible {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+}
+.status-bar.loading {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+.status-bar.error { background-color: var(--color-error); color: #fff; }
+.status-bar.success {
+  background-color: var(--color-primary);
+  color: #fff;
+  padding-right: 40px;
+}
+
+/* --- Close Button (for status + result cards) --- */
+.status-bar .close-btn,
+.result-card .close-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255,255,255,0.15);
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+.status-bar .close-btn:hover,
+.result-card .close-btn:hover {
+  opacity: 1;
+  background-color: rgba(255,255,255,0.25);
+}
+.status-bar .close-btn i,
+.result-card .close-btn i {
+  margin: 0;
+}
+
+/* --- Specific Result Card Styling --- */
+.result-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  flex-direction: column;
+  text-align: left;
+  padding: 20px 24px;
+  padding-right: 48px;
+  position: relative;
+}
+.result-card.error {
+  background-color: var(--color-error);
+  border-color: var(--color-error);
+  color: white;
+}
+.result-card.success {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.result-card .result-content { width: 100%; display: flex; flex-direction: column; }
+.result-card h3 { font-size: 18px; margin-bottom: 8px; }
+.result-card h3 a { color: var(--color-primary-hover); }
+
+.result-separator {
+  border: none;
+  height: 1px;
+  background-color: var(--color-border);
+  margin: 12px 0;
+}
+.result-card .next-matches-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+}
+.result-card ul {
+  list-style: disc;
+  padding-left: 20px;
+  margin: 0;
+}
+.result-card li {
+  font-size: 15px;
+  margin-bottom: 5px;
+}
+.result-card li:last-child { margin-bottom: 0; }
+.result-card li a { color: var(--color-text); }
+.result-card li a:hover { text-decoration: underline; }
+
+/* --- Loader --- */
+.loader {
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--color-border);
+  border-bottom-color: var(--color-primary);
+  border-radius: 50%;
+  display: inline-block;
+  animation: rotation 1s linear infinite;
+  margin-right: 10px;
+}
+.status-bar.loading .result-content,
+.status-bar.loading .status-content {
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+@keyframes rotation {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
