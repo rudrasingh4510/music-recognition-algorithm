@@ -1,4 +1,4 @@
-const API = "http://104.214.180.203:5001";
+const API = "https://musicrec.mooo.com";
 
 function $(id){ return document.getElementById(id); }
 
