@@ -247,7 +247,8 @@ int main() {
 
                 std::filesystem::create_directories("./data/uploads");
                 string out_template = "./data/uploads/" + basename;
-                string cmd = "yt-dlp -x --audio-format wav --postprocessor-args \"-ar 44100\" -o \"" + out_template + ".%(ext)s\" \"" + clean_url + "\"";
+                string cmd = "yt-dlp --cookies ./cookies.txt -x --audio-format wav --postprocessor-args \"-ar 44100\" -o \"" + out_template + ".%(ext)s\" \"" + clean_url + "\"";
+
 
                 int ret = system(cmd.c_str());
                 string final_path = out_template + ".wav";
