@@ -16,6 +16,9 @@
 
   <header class="page-header">
     <h1 class="header-title">music recognition algorithm</h1>
+    <div id="networkWarning" style="display: none; background: #fff3cd; color: #856404; padding: 10px; margin-top: 10px; border: 1px solid #ffeeba; border-radius: 5px;">
+  ⚠️ Trouble connecting to sever. This might happen on restricted networks (e.g. college/corporate Wi-Fi). Switching to mobile data and reloading will fix this problem.
+</div>
     <div class="db-dropdown">
       <button id="dbToggleBtn" class="btn-secondary"><i class="fa-solid fa-list-ul"></i> Songs in Database</button>
       <div id="dbDropdownContent" class="dropdown-content">
@@ -26,7 +29,7 @@
 
   <main class="main-content">
     <div class="recorder-container">
-      <p class="subtitle">Tap the microphone to identify a song...</p>
+      <p class="subtitle">Only songs in the database can be recognised. Tap the microphone to identify...</p>
       <button id="btnRecord" class="btn-record">
         <i class="fa-solid fa-microphone"></i>
       </button>
@@ -39,20 +42,28 @@
 
   <footer class="add-song-footer">
     <div class="add-song-card">
-      <h2>Add a Song from YouTube</h2>
-      <p class="card-description">Paste a YouTube link here to add the song to the DB.</p>
-      <div class="input-row">
-        <i class="fa-solid fa-link"></i>
-        <input id="ytUrl" type="text" class="text-input" placeholder="https://youtube.com/watch?v=...">
-      </div>
-       <input id="ytName" type="text" class="text-input" placeholder="Display name (optional)">
-      <button id="btnAddYtSong" class="btn-primary"><i class="fa-brands fa-youtube"></i> Add Song to Database</button>
-      <div id="ytStatus" class="status-bar">
-        <button class="close-btn" onclick="document.getElementById('ytStatus').classList.remove('visible')"><i class="fa-solid fa-xmark"></i></button>
-        <div class="status-content"></div>
+      <h2>Upload a Song</h2>
+      <p class="card-description">Provide a label and upload a WAV file to add it to the Database.</p>
+      
+      <input id="songName" type="text" class="text-input" placeholder="Song Label (Required)">
+      
+      <label for="songFile" class="file-input-label"><i class="fa-solid fa-file-audio"></i> Choose WAV File</label>
+      <input id="songFile" type="file" accept="audio/wav" class="file-input">
+
+      <button id="btnUploadSong" class="btn-primary"><i class="fa-solid fa-arrow-up-from-bracket"></i> Upload & Add to Database</button>
+      <div id="songStatus" class="status-bar">
+         <button class="close-btn" onclick="document.getElementById('songStatus').classList.remove('visible')"><i class="fa-solid fa-xmark"></i></button>
+         <div class="result-content"></div>
       </div>
     </div>
   </footer>
+<footer class="app-footer">
+  <p>
+    Made with <span class="blue-heart">💙</span> by 
+    <a href="https://github.com/rudrasingh4510" target="_blank" rel="noopener">Rudra Singh</a>
+  </p>
+</footer>
+
 
   <script src="recorder-wav.js"></script>
   <script src="app.js"></script>

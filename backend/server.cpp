@@ -11,62 +11,13 @@
 #include <sstream>
 #include <filesystem>
 #include <ctime>
-#include <cstdlib> // For system()
-#include <cstdio>  // For popen()
-#include <memory>  // For unique_ptr
+#include <cstdlib>
 
 using namespace std;
 
 static const int PORT = 5001;
 static const int BACKLOG = 16;
 static const size_t MAX_HEADER = 64 * 1024;
-
-// Helper function to execute a command and capture its standard output.
-static string exec_and_get_output(const string& cmd) {
-    char buffer[128];
-    string result = "";
-    unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
-    if (!pipe) {
-        return ""; // popen failed
-    }
-    while (fgets(buffer, sizeof(buffer), pipe.get()) != nullptr) {
-        result += buffer;
-    }
-    // Remove trailing newline character, if it exists.
-    if (!result.empty() && result.back() == '\n') {
-        result.pop_back();
-    }
-    return result;
-}
-
-// Helper function to remove timestamps and other params from a YouTube URL.
-static string sanitize_youtube_url(const string& url) {
-    string video_id;
-
-    size_t v_pos = url.find("v=");
-    if (v_pos != string::npos) {
-        size_t id_start = v_pos + 2;
-        size_t id_end = url.find('&', id_start);
-        video_id = url.substr(id_start, id_end - id_start);
-    } else {
-        size_t short_pos = url.find("youtu.be/");
-        if (short_pos != string::npos) {
-            size_t id_start = short_pos + 9;
-            size_t id_end = url.find('?', id_start);
-            video_id = url.substr(id_start, id_end - id_start);
-        }
-    }
-    
-    if (!video_id.empty()) {
-        if (video_id.length() > 11) {
-            video_id = video_id.substr(0, 11);
-        }
-        return "https://www.youtube.com/watch?v=" + video_id;
-    }
-
-    return url; // Fallback
-}
-
 
 static void send_response(int client, const string& status, const string& body, const string& contentType="application/json") {
     std::ostringstream oss;
@@ -119,17 +70,6 @@ static string get_query_param(const string& target, const string& key) {
     return url_decode(val);
 }
 
-// Simple JSON value extractor
-static string get_json_val(const string& json, const string& key) {
-    string key_str = "\"" + key + "\":\"";
-    auto p1 = json.find(key_str);
-    if (p1 == string::npos) return "";
-    p1 += key_str.length();
-    auto p2 = json.find("\"", p1);
-    if (p2 == string::npos) return "";
-    return json.substr(p1, p2-p1);
-}
-
 static string now_ts() {
     std::time_t t = std::time(nullptr);
     char buf[64];
@@ -170,6 +110,7 @@ static bool read_request(int client, string& method, string& target, string& hea
             string key = hline.substr(0,p);
             string val = hline.substr(p+1);
             auto l = val.find_first_not_of(" \t"); if (l!=string::npos) val=val.substr(l);
+            // CORRECTED: key.c_str()
             if (strcasecmp(key.c_str(), "Content-Length")==0) clen = static_cast<size_t>(stoll(val));
         }
     }
@@ -194,7 +135,8 @@ int main() {
     addr.sin_addr.s_addr = inet_addr("0.0.0.0");
     addr.sin_port = htons(PORT);
 
-    if (::bind(server_fd, (sockaddr*)&addr, sizeof(addr)) < 0) {
+    // CORRECTED: (sockaddr*) cast
+    if (::bind(server_fd, (sockaddr*) & addr, sizeof(addr)) < 0) {
         perror("bind"); return 1;
     }
     if (::listen(server_fd, BACKLOG) < 0) {
@@ -226,45 +168,26 @@ int main() {
             oss << "]}";
             send_response(client, "200 OK", oss.str());
         }
-        else if (method=="POST" && target.rfind("/add-youtube",0)==0) {
-            string url = get_json_val(body, "url");
-            string name = get_json_val(body, "name");
-            
-            if (url.empty()) {
-                send_response(client, "400 Bad Request", R"({"error":"missing_url"})");
+        else if (method=="POST" && target.rfind("/upload",0)==0) {
+            string name = get_query_param(target, "name");
+            if (name.empty()) {
+                send_response(client, "400 Bad Request", R"({"error":"A song label is required."})");
             } else {
-                string clean_url = sanitize_youtube_url(url);
-                string display_name = name;
-                string basename = "yt_" + now_ts();
-
-                if (display_name.empty()) {
-                    string title_cmd = "yt-dlp --get-title \"" + clean_url + "\"";
-                    display_name = exec_and_get_output(title_cmd);
-                }
-                if (display_name.empty()) {
-                    display_name = basename;
-                }
-
                 std::filesystem::create_directories("./data/uploads");
-                string out_template = "./data/uploads/" + basename;
-                string cmd = "yt-dlp --cookies ./cookies.txt -x --audio-format wav --postprocessor-args \"-ar 44100\" -o \"" + out_template + ".%(ext)s\" \"" + clean_url + "\"";
-
-
-                int ret = system(cmd.c_str());
-                string final_path = out_template + ".wav";
-
-                if (ret != 0 || !filesystem::exists(final_path)) {
-                    send_response(client, "500 Internal Server Error", R"({"error":"download_failed"})");
+                string path = "./data/uploads/upload_" + now_ts() + ".wav";
+                FILE* f = fopen(path.c_str(), "wb");
+                if (!f) {
+                    send_response(client, "500 Internal Server Error", R"({"error":"Failed to write temporary file."})");
                 } else {
-                    int id = add_song_to_db(final_path, display_name, clean_url);
-                    filesystem::remove(final_path);
-
+                    fwrite(body.data(), 1, body.size(), f);
+                    fclose(f);
+                    int id = add_song_to_db(path, name);
+                    filesystem::remove(path);
                     if (id < 0) {
-                        send_response(client, "400 Bad Request", R"({"error":"fingerprint_failed"})");
+                        send_response(client, "400 Bad Request", R"({"error":"Fingerprinting failed. Check WAV format."})");
                     } else {
-                        // Return a simpler JSON object, just the name.
                         std::ostringstream oss;
-                        oss << R"({"name":")" << display_name << R"("})";
+                        oss << R"({"name":")" << name << R"("})";
                         send_response(client, "200 OK", oss.str());
                     }
                 }
