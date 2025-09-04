@@ -1,4 +1,4 @@
-const API = "http://localhost:5001";
+const API = "https://musicrec.mooo.com";
 
 function $(id){ return document.getElementById(id); }
 
