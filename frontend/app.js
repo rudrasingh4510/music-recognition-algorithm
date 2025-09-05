@@ -87,6 +87,7 @@ $("btnUploadSong").onclick = async () => {
         <p class="success-song-name">${data.name}</p>
         `;
         setStatus(statusBox, successHtml, 'success');
+        // Attempt to refresh songs only if we haven't timed out earlier
         refreshSongs();
         $("songName").value = "";
         $("songFile").value = "";
@@ -113,15 +114,50 @@ $("songFile").addEventListener('change', () => {
     }
 });
 
+// --- timeout settings ---
+const SONGS_FETCH_TIMEOUT_MS = 6000; // 6 seconds
+let songsFetchTimedOut = false;      // once true, automatic fetches stop
 
 // 2) Refresh DB list -> /songs (now in dropdown)
-async function refreshSongs(){
+async function refreshSongs() {
+  // If we've already hit the 6s timeout previously, don't auto-retry
+  if (songsFetchTimedOut) return;
+
+  const controller = new AbortController();
+  const signal = controller.signal;
+  const timeoutId = setTimeout(() => {
+  // Abort the fetch and show the network warning
+  controller.abort();
+  songsFetchTimedOut = true;
+
+  // show the top banner
+  const warning = $("networkWarning");
+  if (warning) warning.style.display = "block";
+
+  // also show a helpful message inside the songs dropdown
+  const songList = $("songs");
+  if (songList) songList.innerHTML = `<li>Failed to load songs.</li>`;
+}, SONGS_FETCH_TIMEOUT_MS);
+
+
   try {
-    const res = await fetch(`${API}/songs`);
+    const res = await fetch(`${API}/songs`, { signal });
+    clearTimeout(timeoutId);
+
+    // hide timeout warning if previously visible (fetch succeeded)
+    const warning = $("networkWarning");
+    if (warning) warning.style.display = "none";
+
+    if (!res.ok) {
+      // Treat HTTP-level non-OK as a failure to load songs (but not the 6s banner)
+      $("songs").innerHTML = `<li>Failed to load songs.</li>`;
+      return;
+    }
+
     const data = await res.json();
     const songList = $("songs");
     songList.innerHTML = "";
-    if (data.songs.length === 0) {
+    if (!data.songs || data.songs.length === 0) {
       songList.innerHTML = `<li>Database is empty.</li>`;
       return;
     }
@@ -138,11 +174,20 @@ async function refreshSongs(){
       songList.appendChild(li);
     });
   } catch (e) {
-  $("songs").innerHTML = `<li>Failed to load songs.</li>`;
-  const warning = $("networkWarning");
-  if (warning) warning.style.display = "block";
+    // If the fetch was aborted due to timeout, the timeout handler already showed the banner
+    if (e.name === 'AbortError') {
+      // nothing more to do: songsFetchTimedOut has been set and banner is visible
+      return;
+    }
+    // Other errors (DNS, network immediate failure) — show simple failed message but no banner
+    $("songs").innerHTML = `<li>Failed to load songs.</li>`;
+    // keep banner hidden in this case
+  } finally {
+    // ensure timeout cleared in case of unexpected flow
+    clearTimeout(timeoutId);
+  }
 }
-}
+
 refreshSongs();
 
 
