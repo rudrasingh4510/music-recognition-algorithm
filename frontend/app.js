@@ -1,4 +1,7 @@
-const API = "https://musicrec.mooo.com";
+// Auto-detect environment and set API endpoint
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+  ? "http://localhost:5001"  // Local development
+  : "https://musicrec.mooo.com";  // Production
 
 function $(id){ return document.getElementById(id); }
 
@@ -192,22 +195,45 @@ refreshSongs();
 
 
 // 3) Record N seconds as WAV in-browser, then recognize
-let micStream = null;
 const btnRecord = $("btnRecord");
+let hasRequestedPermission = false;
+
+// Check if we have microphone permission using the Permissions API
+async function checkMicrophonePermission() {
+  try {
+    const result = await navigator.permissions.query({ name: 'microphone' });
+    return result.state === 'granted';
+  } catch (e) {
+    // Permissions API not supported or failed
+    return false;
+  }
+}
+
 $("btnRecord").onclick = async () => {
   const secs = 5;
   const resultBox = $("idResult");
   let countdownInterval;
+  let micStream = null;
 
   try {
     btnRecord.disabled = true; // 🔒 disable mic button
     btnRecord.classList.add('recording');
     setStatus(resultBox, "", null);
 
-    if (!micStream) {
-      setStatus(resultBox, "Waiting for microphone permission...", 'loading');
-      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // Check if we already have permission
+    const hasPermission = await checkMicrophonePermission();
+    
+    // Get microphone stream for this recording session
+    if (hasPermission || hasRequestedPermission) {
+      setStatus(resultBox, "Starting recording...", 'loading');
+    } else {
+      setStatus(resultBox, "Requesting microphone access...", 'loading');
     }
+    
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    
+    // Mark that we've requested permission at least once
+    hasRequestedPermission = true;
 
     let timeLeft = secs;
     setStatus(resultBox, `Recording... (${timeLeft}s)`, 'loading');
@@ -223,6 +249,12 @@ $("btnRecord").onclick = async () => {
     const blob = await recordAndEncodeWav(micStream, secs);
     clearInterval(countdownInterval);
 
+    // Stop the microphone stream immediately after recording
+    if (micStream) {
+      micStream.getTracks().forEach(track => track.stop());
+      micStream = null;
+    }
+
     setStatus(resultBox, "Identifying...", 'loading');
     const res = await fetch(`${API}/recognize`, {
       method: "POST",
@@ -233,10 +265,15 @@ $("btnRecord").onclick = async () => {
     displayIdResult(result);
   } catch (e) {
     clearInterval(countdownInterval);
-    micStream = null;
+    // Stop the microphone stream if there was an error
+    if (micStream) {
+      micStream.getTracks().forEach(track => track.stop());
+      micStream = null;
+    }
     let errorMsg = "Recording failed: " + e.message;
     if (e.name === "NotAllowedError" || e.name === "PermissionDeniedError") {
       errorMsg = "Recording failed: Microphone permission was denied. Please allow microphone access.";
+      hasRequestedPermission = false; // Reset permission flag on denial
     }
     setStatus(resultBox, errorMsg, 'error');
   } finally {

@@ -127,7 +127,10 @@ static bool read_request(int client, string& method, string& target, string& hea
     // Parse request line
     std::istringstream iss(headers);
     string line; getline(iss, line);
-    if (!line.empty() && line.back()=='\r') line.pop_back();
+    // Remove trailing \r\n or \r
+    while (!line.empty() && (line.back()=='\r' || line.back()=='\n')) {
+        line.pop_back();
+    }
     std::istringstream rl(line);
     rl >> method >> target;
 
